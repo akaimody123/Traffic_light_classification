@@ -1,0 +1,24 @@
+1. The model
+This model includes 6 state variables and 2 actuators variables. A timestep length N of 10 is set and timestep dt is set as 0.1s. Therefore there are 6*N+2*(N-1)=78 element in the vars vector. The total cost function is a weighted sum of many cost functions. The weight is tuned by trial and error.
+2. Choice of N and dt
+N represents the horizon. N cannot be too small--(can't predict situation ahead enough) nor too large (may result in inaccuracy). dt is the timestep used to update the model. If dt is too big, may result in inaccurate prediction. However, if dt is too small the computational cost will be huge. Therefore, a tradeoff should be made. By trial and error, N=10 and dt=0.1 works fine.
+3. Polynomial fitting
+As the waypoints provided by the simulator uses the map coordinate system while other variables uses the car's coordinate system. So a transformation is needed before fitting the polynomial
+4. Latency
+Due to 100ms latency, when the actuator send signals to the steering wheel and throttle, the result will only be shown in the vehicle state in the next 100ms. Therefore, the state is no longer the ideal state as we modelled, but state in the next 100ms. It is considered in the model by using 
+
+// Initial state.
+  double x0 = 0;
+  double y0 = 0;
+  double psi0 = 0;
+  double cte0 = coeffs[0];
+  double epsi0 = -atan(coeffs[1]);
+
+  const double Lf = 2.67;
+  // State after delay.
+  double x_delay = x0 + ( v * cos(psi0) * delay );
+  double y_delay = y0 + ( v * sin(psi0) * delay );
+  double psi_delay = psi0 - ( v * delta * delay / Lf );
+  double v_delay = v + a * delay;
+  double cte_delay = cte0 + ( v * sin(epsi0) * delay );
+  double epsi_delay = epsi0 - ( v * atan(coeffs[1]) * delay / Lf );
